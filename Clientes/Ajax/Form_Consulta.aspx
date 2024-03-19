@@ -18,8 +18,8 @@
             <form id="Form_Consulta" runat="server">
                 <div class="bottons">
                     <br/>
-                     <button type="button" id="btn_Nuevo" class="btn btn-primary" onclick="btnNuevo()"> Nuevo </button>   
-                     <button type="button" id="btn_Buscar" class="btn btn-primary" onclick="btnBuscar()"> Buscar </button>   
+                     <button type="button" id="btn_Nuevo" class="btn btn-primary" onclick="ft_NuevoCliente()"> Nuevo </button>   
+                     <button type="button" id="btn_Buscar" class="btn btn-primary" onclick="ft_MostrarCliente('B')"> Buscar </button>   
                 </div>
                 <div class="input-group">
                     <br/>
@@ -31,25 +31,62 @@
                 <table id="tbl_Clientes" class="table table-active" cellspacing="0" whith="100%">
                     <thead>
                         <tr>
-                            <td>
-                                <button class="btn btn-primary btn-sm" onclick="editarFila(this)">Sel</button>
-                            </td>
-                            <td>Nombre</td>
-                            <td>Primer Apellido</td>
-                            <td>Segundo Apellido</td>
-                            <td>Identificación</td>
-                            <td>
-                                <button class="btn btn-danger btn-sm" onclick="eliminarFila(this)">Eliminar</button>
-                            </td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
                           </tr>
                     </thead>
-                    
-
                 </table>
             </div>
             </form>
 
-    <script src="../Componentes/JQuery/jquery-3.7.1.min.js"></script>
+    <div class="modal fade" id="Form_Actualiza" tabindex="-1" role="dialog" aria-labelledby="Form_ActualizaLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="Form_ActualizaLabel">Actualizar Datos de Clientes</h5>
+                </div>
+                <div class="modal-body">
+                    <form id="nuevoForm">
+                      <div class="form-group">
+                            <label for="nombre">Nombre</label>
+                            <input type="text" class="form-control" id="nombre" placeholder="Nombre"/>
+                      </div>
+                      <div class="form-group">
+                            <label for="primerApellido">Primer Apellido</label>
+                            <input type="text" class="form-control" id="primerApellido" placeholder="Primer Apellido"/>
+                      </div>
+                      <div class="form-group">
+                            <label for="segundoApellido">Segundo Apellido</label>
+                            <input type="text" class="form-control" id="segundoApellido" placeholder="Segundo Apellido"/>
+                      </div>
+                      <div class="form-group">
+                        <label for="identificacion">Identificación</label>
+                        <input type="text" class="form-control" id="identificacion" placeholder="Identificación"/>
+                      </div>
+                      <div class="form-group">
+                            <label for="telefono">Teléfono</label>
+                            <input type="text" class="form-control" id="telefono" placeholder="Teléfono"/>
+                      </div>
+                      <div class="form-group">
+                        <label for="direccion">Dirección</label>
+                        <input type="text" class="form-control" id="direccion" placeholder="Dirección"/>
+                      </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="ft_Cerrar()">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="ft_GuardarCliente()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="../Componentes/JQuery/jquery.min.js"></script>
     <script src="../Componentes/Bootstrap/js/bootstrap.js"></script>
     <script src="../Componentes/Bootstrap/js/bootstrap.min.js"></script>
     <script src="../Componentes/DataTables/datatables.js"></script>
@@ -58,134 +95,141 @@
 
     <script>
 
-        function ft_MostrarClientes()
-        {
-            $('#tbl_Clientes').dataTable().fnDestroy();
+        ft_MostrarClientes();
 
-            $.ajax({
-                url: 'DatosClientes.aspx',
-                datatype: 'JSON',
-                type: 'GET',
-                datatype: 'JSON',
-                contentType: 'application/json; charset=utf-8',
-                data: data,
+        function ft_MostrarClientes() {
+            $(document).ready(function () {
+                $.ajax({
+                    type: "POST",
+                    url: "Form_Consulta.aspx/Mostrar_Clientes",
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    //data: JSON.stringify({ N: nombre }),
+                    success: function (response) {
+                        var data = JSON.parse(response.d); // obtengo los datos devueltos por el WebMethod Mostrar_Clientes
+                        var table = $("#tbl_Clientes");
+                        table.empty(); // Limpio la tabla para refrescarla
+                        var headerRow = $("<tr></tr>");
+                        headerRow.append($("<th>Seleccionar</th>"));
+                        headerRow.append($("<th>Nombre</th>"));
+                        headerRow.append($("<th>Primer Apellido</th>"));
+                        headerRow.append($("<th>Segundo Apellido</th>"));
+                        headerRow.append($("<th>Identificación</th>"));
+                        headerRow.append($("<th>Acciones</th>"));
+                        table.append(headerRow);
 
-                success: function (data)
-                {
-                    $('#tbl_Clientes').dataTable({
-                        "aaData": data,
-                        "scrollX": true,
-                        "aoColumns": [
-                            {"sTitle": "Nombre", "mData": "p_Nombre" },
-                            {"sTitle": "Primer Apellido", "mData": "p_Apellido1" },
-                            {"sTitle": "Segundo Apellido", "mData": "p_Apellido2" },
-                            {"sTitle": "Identificación", "mData": "p_Identificación" },
-
-                        ] 
-                        
-
-                    })
-                }
-
-            })
+                        $.each(data, function (index, item) {
+                            var row = $("<tr></tr>");
+                            row.append($("<td><button class='btn btn-primary btn-sm' onclick='ft_EditarCliente(this)'>Sel</button></td>"));
+                            row.append($("<td>" + item.Nombre + "</td>"));
+                            row.append($("<td>" + item.PrimerApellido + "</td>"));
+                            row.append($("<td>" + item.SegundoApellido + "</td>"));
+                            row.append($("<td>" + item.Identificacion + "</td>"));
+                            row.append($("<td><button class='btn btn-danger btn-sm' onclick='ft_EliminarClientes(this)'>Eliminar</button></td>"));
+                            table.append(row);
+                        });
+                    },
+                    error: function (response) {
+                        alert("Error al recuperar los datos.");
+                    }
+                });
+            });
         }
+
 
         //$('#txt_Buscar').on('keyup', function () {
         //    var table = $('#tbl_Clientes').DataTable();
         //    table.search(this.value).draw();
         //});
-        function eliminarFila(btn) {
+        function ft_EliminarClientes(btn) {
             var row = $(btn).closest('tr');
-            var id = row.find('td:eq(0)').text(); // Asume que el ID está en la primera columna
+            var nombre = row.find('td:eq(1)').text(); // Asume que el ID está en la primera columna
 
             $.ajax({
-                url: 'ruta/a/tu/servidor/para/eliminar',
-                type: 'POST',
-                data: { id: id },
+                type: "POST",
+                url: "Form_Consulta.aspx/Eliminar_Cliente",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify({ N: nombre }),
                 success: function (response) {
-                    if (response.success) {
-                        row.remove();
-                        $('#tbl_Clientes').DataTable().draw();
-                    } else {
-                        alert('Error al eliminar el registro');
-                    }
-                }
-            });
-        }
-        function btnNuevo() {
-            $('#nuevoModal').modal('show');
-        }
-        function cerrarModal() {
-            $('#nuevoModal').modal('hide');
-        }
-
-        // Función para guardar el nuevo objeto
-        function guardarNuevo() {
-            var nombre = $('#nombre').val();
-            var primerApellido = $('#primerApellido').val();
-            var segundoApellido = $('#segundoApellido').val();
-            var identificacion = $('#identificacion').val();
-
-            $.ajax({
-                url: 'ruta/a/tu/servidor/para/guardar', // Reemplaza con la ruta correcta
-                type: 'POST',
-                data: {
-                    nombre: nombre,
-                    primerApellido: primerApellido,
-                    segundoApellido: segundoApellido,
-                    identificacion: identificacion
+                    var mensaje = response.d;
+                    alert(mensaje);
+                    ft_MostrarClientes();
                 },
-                success: function (response) {
-                    if (response.success) {
-                        // Recargar la tabla o actualizarla con el nuevo objeto
-                        $('#nuevoModal').modal('hide');
-                        alert('Objeto guardado exitosamente');
-                    } else {
-                        alert('Error al guardar el objeto');
-                    }
+                error: function (response) {
+                    alert("Error al eliminar el cliente.");
                 }
             });
         }
+
+        function ft_EditarClientes(btn) {
+            var row = $(btn).closest('tr');
+            var nombre = row.find('td:eq(1)').text(); 
+
+            $.ajax({
+                type: "POST",
+                url: "Form_Consulta.aspx/Editar_Cliente",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify({ N: nombre }),
+                success: function (response) {
+                    var data = JSON.parse(response.d);
+
+
+                    // Aquí puedes procesar y mostrar los datos recuperados
+                    console.log(data);
+                },
+                error: function (response) {
+                    alert("Error al recuperar el cliente.");
+                }
+            });
+        }
+
+        function ft_GuardarCliente() {
+            var n = $('#nombre').val();
+            var pa = $('#primerApellido').val();
+            var sa = $('#segundoApellido').val();
+            var i = $('#identificacion').val();
+            var t = $('#telefono').val();
+            var d = $('#direccion').val();
+
+            $.ajax({
+                type: "POST",
+                url: "Form_Consulta.aspx/Insertar_Cliente",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify({
+                    nombre: n,
+                    apellido1: pa,
+                    apellido2: sa,
+                    identificacion: i,
+                    telefono: t,
+                    direccion: d,
+                }),
+                success: function (response) {
+                    var mensaje = response.d;
+                    alert(mensaje);
+                    ft_MostrarClientes();
+                },
+                error: function (response) {
+                    alert("Error al insertar el cliente.");
+                }
+            });
+            ft_Cerrar();
+
+        }
+
+        function ft_NuevoCliente() {
+            $('#Form_Actualiza').modal('show');
+        }
+
+        function ft_Cerrar() {
+            $('#Form_Actualiza').modal('hide');
+        }
+
 
     </script> 
 
-    <%-- ESTOP ES LO ULOTIMO --%>
-    <div class="modal fade" id="nuevoModal" tabindex="-1" role="dialog" aria-labelledby="nuevoModalLabel" aria-hidden="true">
- <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="nuevoModalLabel">Agregar Nuevo Objeto</h5>
-        <%--<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>--%>
-      </div>
-      <div class="modal-body">
-        <form id="nuevoForm">
-          <div class="form-group">
-            <label for="nombre">Nombre</label>
-            <input type="text" class="form-control" id="nombre" placeholder="Nombre"/>
-          </div>
-          <div class="form-group">
-            <label for="primerApellido">Primer Apellido</label>
-            <input type="text" class="form-control" id="primerApellido" placeholder="Primer Apellido"/>
-          </div>
-          <div class="form-group">
-            <label for="segundoApellido">Segundo Apellido</label>
-            <input type="text" class="form-control" id="segundoApellido" placeholder="Segundo Apellido"/>
-          </div>
-          <div class="form-group">
-            <label for="identificacion">Identificación</label>
-            <input type="text" class="form-control" id="identificacion" placeholder="Identificación"/>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="cerrarModal()">Cancelar</button>
-        <button type="button" class="btn btn-primary" onclick="guardarNuevo()">Guardar</button>
-      </div>
-    </div>
- </div>
-</div>
 
 </body>
 </html>
