@@ -1,0 +1,30 @@
+﻿body {}
+
+#Form_Consulta {
+    margin: 10px 13px 5px 10px;
+    border: solid;
+    border-color: cadetblue;
+}
+
+.input-group {
+    margin-left: 10px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: auto;
+}
+
+.input-group label {
+    margin-right: 10px;
+}
+.form-control{
+    margin-right:10px;
+}
+.bottons {
+    display: flex;
+}
+#btn_Nuevo{
+    margin-left:auto;
+    align-items: center;
+    margin-right: 5px;
+}
