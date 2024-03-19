@@ -25,15 +25,23 @@ public partial class Ajax_Default : System.Web.UI.Page
     }
 
     [WebMethod]
-    public static string Mostrar_Clientes()
+    public static string Mostrar_Clientes(string N)
     {
         string connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=sqlclientes;";
         using (SqlConnection con = new SqlConnection(connectionString))
         {
             con.Open();
-
-                 SqlCommand command = new SqlCommand("SELECT ID, Nombre, PrimerApellido, SegundoApellido, Identificacion FROM dbo.FTN_CLIENTES_PRUEBA_LISTA_CLIENTES()", con);
-                 {
+            SqlCommand command;
+            if (N == "todos")
+            {
+                command = new SqlCommand("SELECT ID, Nombre, PrimerApellido, SegundoApellido, Identificacion FROM dbo.FTN_CLIENTES_PRUEBA_LISTA_CLIENTES()", con);
+            }
+            else
+            {
+                command = new SqlCommand("SELECT ID, Nombre, PrimerApellido, SegundoApellido, Identificacion FROM dbo.FTN_CLIENTES_PRUEBA_LISTA_CLIENTES_POR_NOMBRE(@Nombre)", con);
+                command.Parameters.AddWithValue("@Nombre", N);
+            }
+            {
                     using (SqlDataReader reader = command.ExecuteReader())
                     {
                     List<Class_Clientes> clientes = new List<Class_Clientes>();
@@ -54,23 +62,29 @@ public partial class Ajax_Default : System.Web.UI.Page
             }
         }
     }
-
+    
     [WebMethod]
-    public static string Eliminar_Cliente(string N)
+    public static string Eliminar_Cliente(string IdCliente)
     {
         string connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=sqlclientes;";
         using (SqlConnection con = new SqlConnection(connectionString))
         {
             con.Open();
 
-            SqlCommand co = new SqlCommand("SELECT * FROM dbo.FTN_CLIENTES_PRUEBA_LISTA_CLIENTES_POR_NOMBRE(@Nombre)", con);
-            co.Parameters.AddWithValue("@Nombre", N);
+            if (!int.TryParse(IdCliente, out int idClienteInt))
+            {
+                return "Error: ID del cliente no es un número válido.";
+            }
+
+            SqlCommand co = new SqlCommand("SELECT * FROM dbo.FTN_CLIENTES_PRUEBA_LISTA_CLIENTES_POR_ID(@ID)", con);
+            co.Parameters.AddWithValue("@ID", idClienteInt);
             SqlDataReader re = co.ExecuteReader();
             re.Read();
 
             using (SqlCommand command = new SqlCommand("STPR_CLIENTES_PRUEBA_MANTENIMIENTO", con))
             {
                 command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@P_ID", re["ID"].ToString());
                 command.Parameters.AddWithValue("@P_Nombre", re["Nombre"].ToString()); 
                 command.Parameters.AddWithValue("@P_Apellido1", re["PrimerApellido"].ToString());
                 command.Parameters.AddWithValue("@P_Apellido2", re["SegundoApellido"].ToString());
@@ -83,7 +97,7 @@ public partial class Ajax_Default : System.Web.UI.Page
                 command.Parameters.Add(outputParam);
 
                 re.Close();
-               
+
                 command.ExecuteNonQuery();
                 string mensaje = outputParam.Value.ToString();
                 return mensaje;
@@ -92,29 +106,28 @@ public partial class Ajax_Default : System.Web.UI.Page
     }
 
     [WebMethod]
-    public static string Editar_Cliente(string N)
+    public static string Editar_Cliente(Int64 IdCliente)
     {
         string connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=sqlclientes;";
         using (SqlConnection con = new SqlConnection(connectionString))
         {
-            con.Open();
-            using (SqlCommand command = new SqlCommand("FTN_CLIENTES_PRUEBA_LISTA_CLIENTES_POR_NOMBRE", con))
-            {
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@Nombre", N);
+             con.Open();
+             SqlCommand command;
+             command = new SqlCommand("SELECT ID, Nombre, PrimerApellido, SegundoApellido, Identificacion, Telefono, Direccion FROM dbo.FTN_CLIENTES_PRUEBA_LISTA_CLIENTES_POR_ID(@ID)", con);
+             command.Parameters.AddWithValue("@ID", IdCliente);
 
-                DataTable dt = new DataTable();
-                using (SqlDataReader reader = command.ExecuteReader())
-                {
-                    dt.Load(reader);
-                }
-                return JsonConvert.SerializeObject(dt);
-            }
+             DataTable dt = new DataTable();
+             SqlDataReader reader = command.ExecuteReader();
+             dt.Load(reader);
+             var response = JsonConvert.SerializeObject(dt);
+            Console.WriteLine(response);
+            return response;
+
         }
-    }
+     }
 
     [WebMethod]
-    public static string Insertar_Cliente(string nombre, string apellido1, string apellido2, string identificacion, string telefono, string direccion)
+    public static string Guardar_Cliente(Int64 IdCliente, string nombre, string apellido1, string apellido2, string identificacion, string telefono, string direccion)
     {
         string connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=sqlclientes;";
         using (SqlConnection con = new SqlConnection(connectionString))
@@ -123,13 +136,21 @@ public partial class Ajax_Default : System.Web.UI.Page
             using (SqlCommand command = new SqlCommand("STPR_CLIENTES_PRUEBA_MANTENIMIENTO", con))
             {
                 command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@P_ID", IdCliente);
                 command.Parameters.AddWithValue("@P_Nombre", nombre);
                 command.Parameters.AddWithValue("@P_Apellido1", apellido1);
                 command.Parameters.AddWithValue("@P_Apellido2", apellido2);
                 command.Parameters.AddWithValue("@P_Identificacion", identificacion);
                 command.Parameters.AddWithValue("@P_Telefono", telefono);
                 command.Parameters.AddWithValue("@P_Direccion", direccion);
-                command.Parameters.AddWithValue("@P_Accion", "I"); // I para Insertar
+                if (IdCliente == 0)
+                {                 
+                    command.Parameters.AddWithValue("@P_Accion", "I"); // I para Insertar
+                }
+                else
+                {
+                    command.Parameters.AddWithValue("@P_Accion", "A"); // I para Insertar
+                }
                 SqlParameter outputParam = new SqlParameter("@P_Mensaje", SqlDbType.NVarChar, 50);
                 outputParam.Direction = ParameterDirection.Output;
                 command.Parameters.Add(outputParam);
