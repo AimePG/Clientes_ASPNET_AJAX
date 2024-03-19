@@ -19,11 +19,12 @@ public partial class Ajax_Datos_Clientes : System.Web.UI.Page
         public string Identificacion { get; set; }
     }
 
-    //public string Mostrar_Clientes() 
-    //{
+    public string Mostrar_Clientes() 
+    {
+        return "";
     //    SqlConnection con = null;
     // Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=master;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False
-    //}
+    }
 
     protected void Page_Load(object sender, EventArgs e)
     {
