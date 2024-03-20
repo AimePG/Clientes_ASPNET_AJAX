@@ -11,10 +11,11 @@
     <link href="../Componentes/Bootstrap/css/bootstrap.min.css" rel="stylesheet" />
     <link href="../Componentes/DataTables/datatables.css" rel="stylesheet" />
     <link href="../Componentes/DataTables/datatables.min.css" rel="stylesheet" />
+
 </head>
 
 <body>
-            <h>Atención a Clientes</h>
+            <h5>ATENCIÓN A CLIENTES</h5>
             <form id="Form_Consulta" runat="server">
                 <div class="bottons">
                     <br/>
@@ -33,10 +34,6 @@
                         <tr>
                             <td></td>
                             <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
                           </tr>
                     </thead>
                 </table>
@@ -47,7 +44,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="Form_ActualizaLabel">Actualizar Datos de Clientes</h5>
+                    <h5 class="modal-title" id="Form_ActualizaLabel">ACTUALIZAR DATOS DE LOS CLIENTES</h5>
                 </div>
                 <div class="modal-body">
                     <form id="nuevoForm">
@@ -76,7 +73,6 @@
                         <input type="text" class="form-control" id="direccion" placeholder="Dirección"/>
                       </div>
                       <input type="hidden" id="Id" value="0"/>
-
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -94,164 +90,7 @@
     <script src="../Componentes/DataTables/datatables.js"></script>
     <script src="../Componentes/DataTables/datatables.min.js"></script>
     <script src="../Componentes/JQuery-confirm/js/jquery-confirm.js"></script>
-
-    <script>
-
-        ft_MostrarClientes("todos");
-
-        function ft_MostrarClientes(nombre) {
-            $(document).ready(function () {
-                $.ajax({
-                    type: "POST",
-                    url: "Form_Consulta.aspx/Mostrar_Clientes",
-                    contentType: "application/json; charset=utf-8",
-                    dataType: "json",
-                    data: JSON.stringify({ N: nombre }),
-                    success: function (response) {
-                        var data = JSON.parse(response.d); // obtengo los datos devueltos por el WebMethod Mostrar_Clientes
-                        var table = $("#tbl_Clientes");
-                        table.empty(); // Limpio la tabla para refrescarla
-                        var headerRow = $("<tr></tr>");
-                        headerRow.append($("<th style='display: none;'>ID</th>")); // Columna oculta para el ID
-                        headerRow.append($("<th>Seleccionar</th>"));
-                        headerRow.append($("<th>Nombre</th>"));
-                        headerRow.append($("<th>Primer Apellido</th>"));
-                        headerRow.append($("<th>Segundo Apellido</th>"));
-                        headerRow.append($("<th>Identificación</th>"));
-                        headerRow.append($("<th>Acciones</th>"));
-                        table.append(headerRow); 
-                        $.each(data, function (index, item) {
-                            var row = $("<tr></tr>");
-                            row.append($("<td style='display: none;'>" + item.Id + "</td>")); // Celda oculta con el ID
-                            row.append($("<td><button type='button' class='btn btn-primary btn-sm' onclick='ft_EditarClientes(this)'>Sel</button></td>"));
-                            row.append($("<td>" + item.Nombre + "</td>"));
-                            row.append($("<td>" + item.PrimerApellido + "</td>"));
-                            row.append($("<td>" + item.SegundoApellido + "</td>"));
-                            row.append($("<td>" + item.Identificacion + "</td>"));
-                            row.append($("<td><button class='btn btn-danger btn-sm' onclick='ft_EliminarClientes(this)'>Eliminar</button></td>"));
-                            table.append(row);
-                        });
-                    },
-                    error: function (response) {
-                        alert("Error al recuperar los datos.");
-                    }
-                });
-            });
-        }
-
-
-        //$('#txt_Buscar').on('keyup', function () {
-        //    var table = $('#tbl_Clientes').DataTable();
-        //    table.search(this.value).draw();
-        //});
-        function ft_EliminarClientes(btn) {
-            var row = $(btn).closest('tr');
-            var IdC = row.find('td:eq(0)').text(); // Asume que el ID está en la primera columna
-            console.log(IdC);
-
-            $.ajax({
-                type: "POST",
-                url: "Form_Consulta.aspx/Eliminar_Cliente",
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
-                data: JSON.stringify({ IdCliente: IdC }),
-                success: function (response) {
-                    var mensaje = response.d;
-                    alert(mensaje);
-                    ft_MostrarClientes('todos');
-                },
-                error: function (response) {
-                    alert("Error al eliminar el cliente.");
-                }
-            });
-        }
-
-        function ft_EditarClientes(btn) {
-            var row = $(btn).closest('tr');
-            var IdC = row.find('td:eq(0)').text(); 
-
-            $.ajax({
-                type: "POST",
-                url: "Form_Consulta.aspx/Editar_Cliente",
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
-                data: JSON.stringify({ IdCliente: IdC }),
-                success: function (response) {
-                    var values = JSON.parse(response.d);
-                    $('#Form_Actualiza').modal('show');
-                    $('#Id').val(values[0].ID);
-                    $('#nombre').val(values[0].Nombre);
-                    $('#primerApellido').val(values[0].PrimerApellido);
-                    $('#segundoApellido').val(values[0].SegundoApellido);
-                    $('#identificacion').val(values[0].Identificacion);
-                    $('#telefono').val(values[0].Telefono);
-                    $('#direccion').val(values[0].Direccion);
-                    console.log(values);
-                },
-                error: function (response) {
-                    alert("Error al recuperar el cliente.");
-                }
-            });
-        }
-
-        function ft_GuardarCliente() {
-            var IdC = $('#Id').val();
-            var n = $('#nombre').val();
-            var pa = $('#primerApellido').val();
-            var sa = $('#segundoApellido').val();
-            var i = $('#identificacion').val();
-            var t = $('#telefono').val();
-            var d = $('#direccion').val();
-
-            $.ajax({
-                type: "POST",
-                url: "Form_Consulta.aspx/Guardar_Cliente",
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
-                data: JSON.stringify({
-                    IdCliente: IdC,
-                    nombre: n,
-                    apellido1: pa,
-                    apellido2: sa,
-                    identificacion: i,
-                    telefono: t,
-                    direccion: d,
-                }),
-                success: function (response) {
-                    var mensaje = response.d;
-                    alert(mensaje);
-                    ft_MostrarClientes('todos');
-                },
-                error: function (response) {
-                    alert("Error al insertar el cliente.");
-                }
-            });
-            ft_Cerrar();
-
-        }
-
-        function ft_BuscarCliente() {
-            ft_MostrarClientes($('#txt_Buscar').val());
-        }
-
-        function ft_NuevoCliente() {
-            $('#Id').val(0);
-            $('#nombre').val("");
-            $('#primerApellido').val("");
-            $('#segundoApellido').val("");
-            $('#identificacion').val("");
-            $('#telefono').val("");
-            $('#direccion').val("");
-
-            $('#Form_Actualiza').modal('show');
-        }
-
-        function ft_Cerrar() {
-            $('#Form_Actualiza').modal('hide');
-        }
-
-
-    </script> 
+    <script src="../js/JavaScript.js"></script>
 
 
 </body>

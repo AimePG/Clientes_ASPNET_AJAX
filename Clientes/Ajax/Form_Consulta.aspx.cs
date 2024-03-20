@@ -32,7 +32,7 @@ public partial class Ajax_Default : System.Web.UI.Page
         {
             con.Open();
             SqlCommand command;
-            if (N == "todos")
+            if (N == "todos") // según el parámetro que recibo ejecuto la función correspondiente si es todos o según criterio de búsqueda por nombre
             {
                 command = new SqlCommand("SELECT ID, Nombre, PrimerApellido, SegundoApellido, Identificacion FROM dbo.FTN_CLIENTES_PRUEBA_LISTA_CLIENTES()", con);
             }
@@ -44,7 +44,7 @@ public partial class Ajax_Default : System.Web.UI.Page
             {
                     using (SqlDataReader reader = command.ExecuteReader())
                     {
-                    List<Class_Clientes> clientes = new List<Class_Clientes>();
+                    List<Class_Clientes> clientes = new List<Class_Clientes>(); // Lista de clientes que devuelvo para mostrar en la tabla
                     while (reader.Read())
                     {
                         Class_Clientes cliente = new Class_Clientes
@@ -106,7 +106,7 @@ public partial class Ajax_Default : System.Web.UI.Page
     }
 
     [WebMethod]
-    public static string Editar_Cliente(Int64 IdCliente)
+    public static string Editar_Cliente(Int64 IdCliente) 
     {
         string connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=sqlclientes;";
         using (SqlConnection con = new SqlConnection(connectionString))
@@ -129,35 +129,46 @@ public partial class Ajax_Default : System.Web.UI.Page
     [WebMethod]
     public static string Guardar_Cliente(Int64 IdCliente, string nombre, string apellido1, string apellido2, string identificacion, string telefono, string direccion)
     {
-        string connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=sqlclientes;";
-        using (SqlConnection con = new SqlConnection(connectionString))
+        if (nombre == "" || apellido1 == "" || apellido2 == "" || identificacion == "")
         {
-            con.Open();
-            using (SqlCommand command = new SqlCommand("STPR_CLIENTES_PRUEBA_MANTENIMIENTO", con))
+            return "¡Existen campos (Nombre - Apellidos - Identificación) que son obligatorios.!";
+        }
+        else if (identificacion.LongCount() > 10 || telefono.LongCount() > 10)
+        {
+            return "¡Los campos (Identificación - Teléfono) exceden su longitud (10).!";
+        }
+        else
+        {
+            string connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=sqlclientes;";
+            using (SqlConnection con = new SqlConnection(connectionString))
             {
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@P_ID", IdCliente);
-                command.Parameters.AddWithValue("@P_Nombre", nombre);
-                command.Parameters.AddWithValue("@P_Apellido1", apellido1);
-                command.Parameters.AddWithValue("@P_Apellido2", apellido2);
-                command.Parameters.AddWithValue("@P_Identificacion", identificacion);
-                command.Parameters.AddWithValue("@P_Telefono", telefono);
-                command.Parameters.AddWithValue("@P_Direccion", direccion);
-                if (IdCliente == 0)
-                {                 
-                    command.Parameters.AddWithValue("@P_Accion", "I"); // I para Insertar
-                }
-                else
+                con.Open();
+                using (SqlCommand command = new SqlCommand("STPR_CLIENTES_PRUEBA_MANTENIMIENTO", con))
                 {
-                    command.Parameters.AddWithValue("@P_Accion", "A"); // I para Insertar
-                }
-                SqlParameter outputParam = new SqlParameter("@P_Mensaje", SqlDbType.NVarChar, 50);
-                outputParam.Direction = ParameterDirection.Output;
-                command.Parameters.Add(outputParam);
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@P_ID", IdCliente);
+                    command.Parameters.AddWithValue("@P_Nombre", nombre);
+                    command.Parameters.AddWithValue("@P_Apellido1", apellido1);
+                    command.Parameters.AddWithValue("@P_Apellido2", apellido2);
+                    command.Parameters.AddWithValue("@P_Identificacion", identificacion);
+                    command.Parameters.AddWithValue("@P_Telefono", telefono);
+                    command.Parameters.AddWithValue("@P_Direccion", direccion);
+                    if (IdCliente == 0)
+                    {
+                        command.Parameters.AddWithValue("@P_Accion", "I"); // I para Insertar
+                    }
+                    else
+                    {
+                        command.Parameters.AddWithValue("@P_Accion", "A"); // A para Actualizar
+                    }
+                    SqlParameter outputParam = new SqlParameter("@P_Mensaje", SqlDbType.NVarChar, 50);
+                    outputParam.Direction = ParameterDirection.Output;
+                    command.Parameters.Add(outputParam);
 
-                command.ExecuteNonQuery();
-                string mensaje = outputParam.Value.ToString();
-                return mensaje;
+                    command.ExecuteNonQuery();
+                    string mensaje = outputParam.Value.ToString();
+                    return mensaje;
+                }
             }
         }
     }
