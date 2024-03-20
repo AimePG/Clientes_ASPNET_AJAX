@@ -6,13 +6,12 @@
     "**/node_modules",
     "**/obj",
     "**/platforms"
+  ],
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.aspx"
+    }
   ]
-  {
-    "rewrites": [
-      {
-        "source": "/",
-        "destination": "/index.aspx"
-      }
-    ]
-  }
 }
+  
